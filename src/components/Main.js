@@ -5,32 +5,34 @@ import Form from './Form'
 // import dataSet from './data'
 import { useState } from 'react'
 import { db } from '../firebase'
-import { collection, addDoc, query, onSnapshot } from 'firebase/firestore'
+import { collection, addDoc, onSnapshot, query, doc, deleteDoc } from 'firebase/firestore'
 
 const Main = () => {
 
-  const [data, setData] = useState([])
-  const [showAddTask, setShowAddTask] = useState(false)
+  const [data, setData] = useState([]);
+  const [showAddTask, setShowAddTask] = useState(false);
+
 
   useEffect(() => {
-      const q = query(collection(db, "tasks"));
-      console.log("q", q);
-      const unsub = onSnapshot(q, (querySnapshot) => {
-        let tasksArray = [];
-        querySnapshot.forEach((doc) => {
-          tasksArray.push({ ...doc.data(), id: doc.id })
-        });
-        console.log(tasksArray)
-        setData(tasksArray)
+    const q = query(collection(db, "tasks"));
+    const unsub = onSnapshot(q, (querySnapshot) => {
+      let todosArray = [];
+      querySnapshot.forEach((doc) => {
+        todosArray.push({ ...doc.data(), id: doc.id });
       });
-      return () => unsub();
-    }, [data]);
+      setData(todosArray);
+    });
+    return () => unsub();
+  }, []);
+
+  console.log(data)
+
 
   const showTaskEvent = () => {
     setShowAddTask(() => !showAddTask)
   }
   const deleteTask = (id) => {
-    setData(data.filter(dat => dat.id !== id))
+    deleteDoc(doc(db, "tasks", id));
   }
 
   const addTask = (task) => {
@@ -43,14 +45,12 @@ const Main = () => {
     });
   }
 
-  console.log("testing", data)
-
-  const tasks = data.map(task => (
+  const tasks = data.map(task =>(
     <Task
       onDelete={deleteTask}
       key={task.id}
-      task={task.task}
-      time={task.time}
+      task={task.task.task}
+      time={task.task.time}
       id={task.id}
     />
   ))
